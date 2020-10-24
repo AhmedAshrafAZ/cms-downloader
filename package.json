@@ -1,0 +1,23 @@
+{
+  "name": "cms-downloader",
+  "version": "1.0.0",
+  "description": "This is a script that helps in downloading the content posted on GUC-CMS platform using DOM manipulation",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AhmedAshrafAZ/cms-downloader.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AhmedAshrafAZ/cms-downloader/issues"
+  },
+  "homepage": "https://github.com/AhmedAshrafAZ/cms-downloader#readme",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "puppeteer": "^5.4.0"
+  }
+}
