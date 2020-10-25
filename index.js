@@ -3,13 +3,13 @@ const puppeteer = require('puppeteer');
 require('dotenv').config();
 
 const pupp_options = {
-  headless: true,
-  timeout: 500000,
+  headless: false,
 };
 
 const navigateTo = async (page, target_link) => {
   await page.goto(target_link, {
     waitUntil: 'networkidle0',
+    timeout: 500000,
   });
 };
 
@@ -25,6 +25,53 @@ const getAvailableCourses = async (page) => {
         courses_links.push(courses_menu[i].children[0].href.trim());
     }
     return courses_links;
+  });
+};
+
+const getCourseName = async (page) => {
+  return await page.evaluate(() => {
+    let name = document
+      .querySelectorAll(
+        'span[id="ContentPlaceHolderright_ContentPlaceHoldercontent_LabelCourseName"]'
+      )[0]
+      .innerHTML.toString()
+      .trim();
+    name = name.substring(0, name.lastIndexOf('(')).trim(); // Remove courseID
+    name = name.replaceAll('|', '').replaceAll('(', '[').replaceAll(')', ']'); // Remove the '|' then replace () with []
+    return name.trim();
+  });
+};
+
+const getUnratedContent = async (page) => {
+  return await page.evaluate(() => {
+    const content = [];
+    document
+      .querySelectorAll(
+        'input[class="btn btn-danger close1"][style="display: none;"]' // The unrated content flag
+      )
+      .forEach((el) => {
+        content.push({
+          week: el.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].innerHTML.trim(),
+          name: el.parentElement.parentElement.children[0].children[0].download,
+          link: el.parentElement.parentElement.children[0].children[0].href,
+        });
+      });
+    return content;
+  });
+};
+
+const resolveContentName = async (page) => {
+  await page.evaluate(() => {
+    document.querySelectorAll('a[download]').forEach((el) => {
+      let fileName =
+        el.parentElement.parentElement.parentElement.children[0].children[0]
+          .innerHTML;
+      let fileExtension = el.href.split('.')[
+        document.querySelectorAll('a[download]')[0].href.split('.').length - 1
+      ];
+      let fullName = `${fileName}.${fileExtension}`;
+      el.download = fullName;
+    });
   });
 };
 
@@ -45,7 +92,19 @@ const getAvailableCourses = async (page) => {
   // 1- Get Available Courses
   const available_courses = await getAvailableCourses(page);
   console.log('Fetching Courses Done: ', available_courses);
+  // available_courses.length
+  for (let i = 0; i < 1; i++) {
+    await navigateTo(page, available_courses[i]);
+    const course_name = await getCourseName(page);
+    // Will create a folder later
 
-  // The Rest Of The Script
-  await browser.close();
+    // Adjust download names
+    await resolveContentName(page);
+
+    // Get unrated courses
+    const unrated_content = await getUnratedContent(page);
+  }
+
+  // TODO: close the browser
+  //   await browser.close();
 })();
