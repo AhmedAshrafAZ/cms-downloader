@@ -1,9 +1,19 @@
 'use strict';
 const puppeteer = require('puppeteer');
+const fs = require('fs');
+const httpntlm = require('httpntlm');
+const { callbackify } = require('util');
+const { resolve } = require('path');
+
 require('dotenv').config();
 
 const pupp_options = {
-  headless: false,
+  headless: true,
+};
+
+const userAuthData = {
+  username: process.env.USERNAME,
+  password: process.env.PASSWORD,
 };
 
 const navigateTo = async (page, target_link) => {
@@ -14,7 +24,7 @@ const navigateTo = async (page, target_link) => {
 };
 
 const getAvailableCourses = async (page) => {
-  console.log('Fetching Course...');
+  console.log('[-] Fetching Course');
   return await page.evaluate(() => {
     const courses_menu = document.querySelectorAll(
       'ul[class="vertical-nav-menu metismenu"]'
@@ -24,6 +34,8 @@ const getAvailableCourses = async (page) => {
       if (!courses_menu[i].children[0].href.includes('ViewAllCourseStn'))
         courses_links.push(courses_menu[i].children[0].href.trim());
     }
+    console.log('[+] Fetching Courses Done');
+    console.log('============');
     return courses_links;
   });
 };
@@ -75,13 +87,74 @@ const resolveContentName = async (page) => {
   });
 };
 
+const rateContent = async (page, content_name) => {
+  return await page.evaluate((content_name) => {
+    document
+      .querySelectorAll(`a[download="${content_name}"]`)[0]
+      .parentElement.parentElement.children[1].children[1].children[0].click();
+  }, content_name);
+};
+
+const downloadContent = async (page, course_name, content) => {
+  const download = (url, file_path, file_name) => {
+    if (!fs.existsSync(file_path)) fs.mkdirSync(file_path, { recursive: true });
+
+    console.log(`[-] Downloading file (${file_name})...`);
+
+    return new Promise((resolve, reject) => {
+      httpntlm.get(
+        {
+          ...userAuthData,
+          url: url,
+          binary: true,
+        },
+        (err, res) => {
+          // Request failed
+          if (err) {
+            console.log(
+              'There is an error in the request, please report it. Error is: ',
+              err.message
+            );
+            reject('Request Error');
+          }
+
+          // Request success, write to the file
+          fs.writeFile(`${file_path}/${file_name}`, res.body, (err) => {
+            if (err) {
+              console.log(
+                'There is an error in file writing, please report it. Error is: ',
+                err.message
+              );
+              reject('FileWriting Error');
+            }
+            console.log(
+              `[+] Download completed. "${file_name}" is saved successfully in ${file_path}`
+            );
+            console.log('==============================');
+            resolve();
+          });
+        }
+      );
+    });
+  };
+
+  const dir_name = `./${course_name}`;
+  for (let i = 0; i < content.length; i++) {
+    await download(
+      content[i].link,
+      `${dir_name}/${content[i].week}`,
+      content[i].name
+    );
+
+    // Rate the downloaded content
+    await rateContent(page, content[i].name);
+  }
+};
+
 (async () => {
   const browser = await puppeteer.launch(pupp_options);
   const page = await browser.newPage();
-  page.authenticate({
-    username: process.env.USERNAME,
-    password: process.env.PASSWORD,
-  });
+  page.authenticate(userAuthData);
 
   // 0- Go to home page
   await navigateTo(
@@ -91,20 +164,21 @@ const resolveContentName = async (page) => {
 
   // 1- Get Available Courses
   const available_courses = await getAvailableCourses(page);
-  console.log('Fetching Courses Done: ', available_courses);
-  // available_courses.length
-  for (let i = 0; i < 1; i++) {
+  
+
+  for (let i = 0; i < available_courses.length; i++) {
     await navigateTo(page, available_courses[i]);
     const course_name = await getCourseName(page);
-    // Will create a folder later
 
     // Adjust download names
     await resolveContentName(page);
 
     // Get unrated courses
     const unrated_content = await getUnratedContent(page);
-  }
+    console.log(unrated_content);
 
-  // TODO: close the browser
-  //   await browser.close();
+    // Start downloading everything 🔥
+    await downloadContent(page, course_name, unrated_content);
+  }
+  await browser.close();
 })();

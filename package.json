@@ -18,6 +18,7 @@
   "homepage": "https://github.com/AhmedAshrafAZ/cms-downloader#readme",
   "dependencies": {
     "dotenv": "^8.2.0",
+    "httpntlm": "^1.7.6",
     "puppeteer": "^5.4.0"
   }
 }
