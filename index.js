@@ -24,18 +24,16 @@ const navigateTo = async (page, target_link) => {
 };
 
 const getAvailableCourses = async (page) => {
-  console.log('[-] Fetching Course');
+  console.log('[-] Fetching Courses');
   return await page.evaluate(() => {
     const courses_menu = document.querySelectorAll(
       'ul[class="vertical-nav-menu metismenu"]'
     )[0].childNodes[5].childNodes[3].childNodes;
-    let courses_links = [];
+    const courses_links = [];
     for (var i = 1; i < courses_menu.length; i += 2) {
       if (!courses_menu[i].children[0].href.includes('ViewAllCourseStn'))
         courses_links.push(courses_menu[i].children[0].href.trim());
     }
-    console.log('[+] Fetching Courses Done');
-    console.log('============');
     return courses_links;
   });
 };
@@ -75,13 +73,13 @@ const getUnratedContent = async (page) => {
 const resolveContentName = async (page) => {
   await page.evaluate(() => {
     document.querySelectorAll('a[download]').forEach((el) => {
-      let fileName =
+      const fileName =
         el.parentElement.parentElement.parentElement.children[0].children[0]
           .innerHTML;
-      let fileExtension = el.href.split('.')[
+      const fileExtension = el.href.split('.')[
         document.querySelectorAll('a[download]')[0].href.split('.').length - 1
       ];
-      let fullName = `${fileName}.${fileExtension}`;
+      const fullName = `${fileName}.${fileExtension}`;
       el.download = fullName;
     });
   });
@@ -130,7 +128,7 @@ const downloadContent = async (page, course_name, content) => {
             console.log(
               `[+] Download completed. "${file_name}" is saved successfully in ${file_path}`
             );
-            console.log('==============================');
+            console.log('------------');
             resolve();
           });
         }
@@ -156,7 +154,7 @@ const downloadContent = async (page, course_name, content) => {
   const page = await browser.newPage();
   page.authenticate(userAuthData);
 
-  // 0- Go to home page
+  // 0- Go to CMS home page
   await navigateTo(
     page,
     'https://cms.guc.edu.eg/apps/student/HomePageStn.aspx'
@@ -164,21 +162,30 @@ const downloadContent = async (page, course_name, content) => {
 
   // 1- Get Available Courses
   const available_courses = await getAvailableCourses(page);
-  
+  console.log('[+] Fetching Courses Done');
+  console.log('============');
 
   for (let i = 0; i < available_courses.length; i++) {
+    // 2- Navigate to the course page
     await navigateTo(page, available_courses[i]);
     const course_name = await getCourseName(page);
 
-    // Adjust download names
+    // 3- Rename the download name
     await resolveContentName(page);
 
-    // Get unrated courses
+    // 4- Get unrated courses
     const unrated_content = await getUnratedContent(page);
-    console.log(unrated_content);
-
-    // Start downloading everything 🔥
-    await downloadContent(page, course_name, unrated_content);
+    if (unrated_content.length === 0) {
+      console.log(
+        `There are no new (unrated) content in this course: ${course_name}`
+      );
+      console.log('============');
+    } else {
+      console.log(`Found new content in this course: ${course_name}`);
+      // 5- Start downloading 🔥. Then rate the downloaded.
+      await downloadContent(page, course_name, unrated_content);
+    }
   }
+  // 6- End the session
   await browser.close();
 })();
