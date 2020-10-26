@@ -2,9 +2,6 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const httpntlm = require('httpntlm');
-const { callbackify } = require('util');
-const { resolve } = require('path');
-
 require('dotenv').config();
 
 const pupp_options = {
@@ -14,6 +11,25 @@ const pupp_options = {
 const userAuthData = {
   username: process.env.USERNAME,
   password: process.env.PASSWORD,
+};
+
+const authenticateUser = () => {
+  return new Promise((resolve, reject) => {
+    httpntlm.get(
+      {
+        ...userAuthData,
+        url: 'https://cms.guc.edu.eg/apps/student/HomePageStn.aspx',
+      },
+      (err, res) => {
+        console.log(
+          res.statusCode === 200
+            ? '[+] You are authorized\n============'
+            : '[!] You are not authorized. Please review your login credentials.'
+        );
+        resolve(res.statusCode === 200);
+      }
+    );
+  });
 };
 
 const navigateTo = async (page, target_link) => {
@@ -136,7 +152,7 @@ const downloadContent = async (page, course_name, content) => {
     });
   };
 
-  const dir_name = `./${course_name}`;
+  const dir_name = `./cms_downloads/${course_name}`;
   for (let i = 0; i < content.length; i++) {
     await download(
       content[i].link,
@@ -152,9 +168,17 @@ const downloadContent = async (page, course_name, content) => {
 (async () => {
   const browser = await puppeteer.launch(pupp_options);
   const page = await browser.newPage();
-  page.authenticate(userAuthData);
+
+  // 00- Authenticate User
+  console.log('[-] Authenticating...');
+  let user_auth = await authenticateUser();
+  if (!user_auth) {
+    await browser.close();
+    return;
+  }
 
   // 0- Go to CMS home page
+  await page.authenticate(userAuthData);
   await navigateTo(
     page,
     'https://cms.guc.edu.eg/apps/student/HomePageStn.aspx'
