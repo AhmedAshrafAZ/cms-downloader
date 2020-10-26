@@ -66,3 +66,7 @@ This script is mainly based on web scraping 🕷🕸 and DOM manipulation.
 ## Contribution 👀
 
 You are very welcome to contribute to this repo. Just create the your Pull Request, I will review it & your updates will be merged ASAP insha'Allah. 💪🏻💪🏻
+
+## Credits ©
+
+[Ibrahim Mohammed](https://github.com/IbrahimMohammed47) & [Me](https://github.com/AhmedAshrafAZ)
