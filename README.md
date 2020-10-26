@@ -35,13 +35,13 @@ This script is created to automate downloading the content from the GUC-CMS plat
 4. Add your username (without @student.guc.edu.eg) to the ".env" file
 
    ```
-   echo "USERNAME=your_username" > .env
+   echo "GUC_SK_USERNAME=your_username" > .env
    ```
 
 5. Add your password to the ".env" file
 
    ```
-   echo "PASSWORD=your_password" >> .env
+   echo "GUC_SK_PASSWORD=your_password" >> .env
    ```
 
 6. Run the script and let the magic begin 🎩🎩🔥🔥

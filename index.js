@@ -9,8 +9,8 @@ const pupp_options = {
 };
 
 const userAuthData = {
-  username: process.env.USERNAME,
-  password: process.env.PASSWORD,
+  username: process.env.GUC_SK_USERNAME,
+  password: process.env.GUC_SK_PASSWORD,
 };
 
 const authenticateUser = () => {
