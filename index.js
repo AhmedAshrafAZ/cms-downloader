@@ -4,6 +4,12 @@ const fs = require('fs');
 const httpntlm = require('httpntlm');
 require('dotenv').config();
 
+const machine_type = process.platform;
+
+const fileSeparator = () => {
+  return machine_type === 'win32' ? '\\' : '/';
+};
+
 const pupp_options = {
   headless: true,
 };
@@ -133,30 +139,34 @@ const downloadContent = async (page, course_name, content) => {
           }
 
           // Request success, write to the file
-          fs.writeFile(`${file_path}/${file_name}`, res.body, (err) => {
-            if (err) {
+          fs.writeFile(
+            `${file_path}${fileSeparator()}${file_name}`,
+            res.body,
+            (err) => {
+              if (err) {
+                console.log(
+                  'There is an error in file writing, please report it. Error is: ',
+                  err.message
+                );
+                reject('FileWriting Error');
+              }
               console.log(
-                'There is an error in file writing, please report it. Error is: ',
-                err.message
+                `[+] Download completed. "${file_name}" is saved successfully in ${file_path}`
               );
-              reject('FileWriting Error');
+              console.log('------------');
+              resolve();
             }
-            console.log(
-              `[+] Download completed. "${file_name}" is saved successfully in ${file_path}`
-            );
-            console.log('------------');
-            resolve();
-          });
+          );
         }
       );
     });
   };
 
-  const dir_name = `./cms_downloads/${course_name}`;
+  const dir_name = `.${fileSeparator()}cms_downloads${fileSeparator()}${course_name}`;
   for (let i = 0; i < content.length; i++) {
     await download(
       content[i].link,
-      `${dir_name}/${content[i].week}`,
+      `${dir_name}${fileSeparator()}${content[i].week.replace(':', '')}`,
       content[i].name
     );
 
