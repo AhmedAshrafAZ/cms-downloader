@@ -12,6 +12,14 @@ Every developer has the coding superpower 😎. So, as a developer, you should a
 
 This script is created to automate downloading the content from the GUC-CMS platform. It fetches the courses you are subscribed in, creates a folder for each course, downloads the content (ALL the content), each file in its corresponding week folder. Et voila! Everything is downloaded 🔥🔥
 
+## Prepare your machine (if windows machine)
+
+1. Download [Node.js](https://nodejs.org/en/) the LTS version then install it. The usual install just next next...
+
+2. Download [Git Bash](https://git-scm.com/downloads) the windows version and also the usual install. Just tick the option of creating a desktop icon
+
+3. You should be ready to move to the next step (How to run)
+
 ## How to run
 
 1. Clone the repo
