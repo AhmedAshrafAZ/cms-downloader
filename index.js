@@ -5,7 +5,6 @@ const httpntlm = require('httpntlm');
 require('dotenv').config();
 
 const machine_type = process.platform;
-
 const fileSeparator = () => {
   return machine_type === 'win32' ? '\\' : '/';
 };
@@ -25,6 +24,7 @@ const authenticateUser = () => {
       {
         ...userAuthData,
         url: 'https://cms.guc.edu.eg/apps/student/HomePageStn.aspx',
+        rejectUnauthorized: false,
       },
       (err, res) => {
         console.log(
