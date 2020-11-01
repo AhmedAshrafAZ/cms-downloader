@@ -54,7 +54,7 @@ This script is created to automate downloading the content from the GUC-CMS plat
 
 6. Run the script and let the magic begin 🎩🎩🔥🔥
    ```
-   node index.js
+   npm start
    ```
 
 ## Unrevealing the magic behind the script 🤓
