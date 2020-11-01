@@ -127,6 +127,7 @@ const downloadContent = async (page, course_name, content) => {
         {
           ...userAuthData,
           url: url,
+          rejectUnauthorized: false,
           binary: true,
         },
         (err, res) => {
