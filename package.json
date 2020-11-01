@@ -4,6 +4,8 @@
   "description": "This is a script that helps in downloading the content posted on GUC-CMS platform using DOM manipulation",
   "main": "index.js",
   "scripts": {
+    "prestart": "git pull origin main",
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

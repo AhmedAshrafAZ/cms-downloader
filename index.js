@@ -177,65 +177,55 @@ const downloadContent = async (page, course_name, content) => {
   }
 };
 
-console.log('[-] Updating the script');
-exec('git pull origin main && npm i', (error) => {
-  if (error) {
-    console.log(
-      'There is an error in pulling update, please report it. Error is: ',
-      error.message
-    );
+// Start the script
+console.log('[+] Everything is up-to-date');
+console.log('============');
+
+(async () => {
+  const browser = await puppeteer.launch(pupp_options);
+  const page = await browser.newPage();
+
+  // 00- Authenticate User
+  console.log('[-] Authenticating...');
+  let user_auth = await authenticateUser();
+  if (!user_auth) {
+    await browser.close();
     return;
   }
-  console.log('[+] Everything is up-to-date');
+
+  // 0- Go to CMS home page
+  await page.authenticate(userAuthData);
+  await navigateTo(
+    page,
+    'https://cms.guc.edu.eg/apps/student/HomePageStn.aspx'
+  );
+
+  // 1- Get Available Courses
+  const available_courses = await getAvailableCourses(page);
+  console.log('[+] Fetching Courses Done');
   console.log('============');
 
-  // Start the script
-  (async () => {
-    const browser = await puppeteer.launch(pupp_options);
-    const page = await browser.newPage();
+  for (let i = 0; i < available_courses.length; i++) {
+    // 2- Navigate to the course page
+    await navigateTo(page, available_courses[i]);
+    const course_name = await getCourseName(page);
 
-    // 00- Authenticate User
-    console.log('[-] Authenticating...');
-    let user_auth = await authenticateUser();
-    if (!user_auth) {
-      await browser.close();
-      return;
+    // 3- Rename the download name
+    await resolveContentName(page);
+
+    // 4- Get unrated courses
+    const unrated_content = await getUnratedContent(page);
+    if (unrated_content.length === 0) {
+      console.log(
+        `There are no new (unrated) content in this course: ${course_name}`
+      );
+      console.log('============');
+    } else {
+      console.log(`Found new content in this course: ${course_name}`);
+      // 5- Start downloading 🔥. Then rate the downloaded.
+      await downloadContent(page, course_name, unrated_content);
     }
-
-    // 0- Go to CMS home page
-    await page.authenticate(userAuthData);
-    await navigateTo(
-      page,
-      'https://cms.guc.edu.eg/apps/student/HomePageStn.aspx'
-    );
-
-    // 1- Get Available Courses
-    const available_courses = await getAvailableCourses(page);
-    console.log('[+] Fetching Courses Done');
-    console.log('============');
-
-    for (let i = 0; i < available_courses.length; i++) {
-      // 2- Navigate to the course page
-      await navigateTo(page, available_courses[i]);
-      const course_name = await getCourseName(page);
-
-      // 3- Rename the download name
-      await resolveContentName(page);
-
-      // 4- Get unrated courses
-      const unrated_content = await getUnratedContent(page);
-      if (unrated_content.length === 0) {
-        console.log(
-          `There are no new (unrated) content in this course: ${course_name}`
-        );
-        console.log('============');
-      } else {
-        console.log(`Found new content in this course: ${course_name}`);
-        // 5- Start downloading 🔥. Then rate the downloaded.
-        await downloadContent(page, course_name, unrated_content);
-      }
-    }
-    // 6- End the session
-    await browser.close();
-  })();
-});
+  }
+  // 6- End the session
+  await browser.close();
+})();
