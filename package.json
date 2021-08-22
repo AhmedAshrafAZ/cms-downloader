@@ -21,6 +21,7 @@
   "dependencies": {
     "dotenv": "^8.2.0",
     "httpntlm": "^1.7.6",
+    "inquirer": "^8.1.2",
     "puppeteer": "^5.4.0"
   }
 }
