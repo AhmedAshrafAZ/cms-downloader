@@ -67,6 +67,70 @@ const getSeasons = async (page) => {
   });
 };
 
+const resolveContentName = async (page) => {
+  await page.evaluate(() => {
+    document.querySelectorAll('a[download]').forEach((el) => {
+      const fileName = el.parentElement.parentElement.parentElement.children[0].children[0].innerHTML;
+      const fileExtension = el.href.split('.')[document.querySelectorAll('a[download]')[0].href.split('.').length - 1];
+      const fullName = `${fileName}.${fileExtension}`;
+      el.download = fullName;
+    });
+  });
+};
+
+const getContent = async (page, courses, seasonId) => {
+  const content = [];
+  const getWeeks = async (page) => {
+    return await page.evaluate(() => {
+      const weeks = [];
+
+      document.querySelectorAll('div.weeksdata').forEach((el) => {
+        const weekAnnouncement = el.children[1].children[0].innerText.trim();
+        const weekDescription = el.children[1].children[1].innerText.trim();
+        const tempWeekContent = el.children[1].children[2].children;
+        const weekContent = [];
+
+        for (let i = 1; i < tempWeekContent.length; i++) {
+          const name = tempWeekContent[i].children[0].children[0].innerText.trim();
+          const id = parseInt(tempWeekContent[i].children[0].children[2].children[0].children[1].id);
+          const url = name.includes('(VoD)')
+            ? `https://dacasts3-vh.akamaihd.net/i/secure/150675/150675_,${id + 2}_${id}.mp4,${id}.mp4,.csmil/index_0_av.m3u8?null=0`
+            : tempWeekContent[i].children[0].children[2].querySelector('a#download').href.trim();
+          const watched = tempWeekContent[i].children[0].children[3].querySelector('i.fa-eye-slash').style.display == 'none';
+          weekContent.push({
+            name,
+            url,
+            watched,
+          });
+        }
+
+        weeks.push({
+          name: el.querySelector('h2.text-big').innerText,
+          announcement: weekAnnouncement,
+          description: weekDescription,
+          content: weekContent,
+        });
+      });
+      return weeks;
+    });
+  };
+
+  const getCourseAnnouncements = async (page) => {
+    return await page.evaluate(() => document.querySelector('div[id="ContentPlaceHolderright_ContentPlaceHoldercontent_desc"]').innerText.trim());
+  };
+
+  for (let i = 0; i < courses.length; i++) {
+    await navigateTo(page, `https://cms.guc.edu.eg/apps/student/CourseViewStn.aspx?id=${courses[i].id}&sid=${seasonId}`);
+    await resolveContentName(page);
+    content.push({
+      name: courses[i].name,
+      weeks: await getWeeks(page),
+      announcements: await getCourseAnnouncements(page),
+    });
+  }
+  return content;
+};
+
 const getAnswers = async (questions, checkbox, message, params) => {
   const answers = await inquirer.prompt([
     {
@@ -102,9 +166,11 @@ const getAnswers = async (questions, checkbox, message, params) => {
   await navigateTo(page, 'https://cms.guc.edu.eg/apps/student/ViewAllCourseStn');
 
   const seasons = await getSeasons(page);
+
   const selectedSeasons = seasons[await getAnswers(seasons, false, 'Please select a season', ['sid'])];
   const selectedCourses = (await getAnswers(selectedSeasons.courses, true, 'Please select the courses you want', ['id'])).map((c) => selectedSeasons.courses[c]);
-  console.log(selectedCourses);
+  const coursesContent = await getContent(page, selectedCourses, selectedSeasons.sid);
+  console.log(JSON.stringify(coursesContent, null, 2));
 
   // 6- End the session
   await browser.close();
