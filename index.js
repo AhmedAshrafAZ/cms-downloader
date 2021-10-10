@@ -91,9 +91,10 @@ const getContent = async (page, courses, seasonId) => {
         const weekContent = [];
 
         for (let i = 1; i < tempWeekContent.length; i++) {
-          const name = tempWeekContent[i].children[0].children[0].innerText.trim();
+          const orgName = tempWeekContent[i].children[0].children[0].innerText.trim();
+          const name = tempWeekContent[i].children[0].children[2].children[0].children[0].download.trim().replace('/', '').replace(':', '').toLowerCase();
           const id = parseInt(tempWeekContent[i].children[0].children[2].children[0].children[1].id);
-          const url = name.includes('(VoD)')
+          const url = orgName.includes('(VoD)')
             ? `https://dacasts3-vh.akamaihd.net/i/secure/150675/150675_,${id + 2}_${id}.mp4,${id}.mp4,.csmil/index_0_av.m3u8?null=0`
             : tempWeekContent[i].children[0].children[2].querySelector('a#download').href.trim();
           const watched = tempWeekContent[i].children[0].children[3].querySelector('i.fa-eye-slash').style.display == 'none';
@@ -150,6 +151,64 @@ const getAnswers = async (questions, checkbox, message, params) => {
   return checkbox ? answers.userAnswers.map((a) => questions.findIndex((q) => q.name === a)) : questions.findIndex((q) => q.name === answers.userAnswers);
 };
 
+const downloadContent = async (page, season, courseName, weeks) => {
+  const download = (url, file_path, file_name) => {
+    if (!fs.existsSync(file_path)) fs.mkdirSync(file_path, { recursive: true });
+
+    console.log(`[-] Downloading file (${file_name})...`);
+
+    return new Promise((resolve, reject) => {
+      if (url.includes('https://dacasts3-vh.akamaihd.net')) {
+        console.log('VOD');
+        resolve();
+      } else {
+        httpntlm.get(
+          {
+            ...userAuthData,
+            url: url,
+            rejectUnauthorized: false,
+            binary: true,
+          },
+          (err, res) => {
+            // Request failed
+            if (err) {
+              console.log('There is an error in the request, please report it. Error is: ', err.message);
+              reject('Request Error');
+            }
+
+            // Request success, write to the file
+            fs.writeFile(`${file_path}${fileSeparator()}${file_name}`, res.body, (err) => {
+              if (err) {
+                console.log('There is an error in file writing, please report it. Error is: ', err.message);
+                reject('FileWriting Error');
+              }
+              console.log(`[+] Download completed. "${file_name}" is saved successfully in ${file_path}`);
+              console.log('------------');
+              resolve();
+            });
+          }
+        );
+      }
+    });
+  };
+
+  const rootPath = `.${fileSeparator()}cms_downloads${fileSeparator()}${season}${fileSeparator()}${courseName}`;
+
+  for (let i = 0; i < weeks.length; i++) {
+    const weekName = weeks[i].name.replace(':', '').toLowerCase();
+    const weekAnnouncement = weeks[i].announcement;
+    const weekDescription = weeks[i].description;
+    const weekContent = weeks[i].content;
+    for (let j = 0; j < weekContent.length; j++) {
+      const fileUrl = weekContent[j].url;
+      const fileName = weekContent[j].name.replace(':', '').toLowerCase();
+      await download(fileUrl, `${rootPath}${fileSeparator()}${weekName}`, fileName);
+      // Rate the downloaded content
+      // await rateContent(page, content[i].name);
+    }
+  }
+};
+
 (async () => {
   const browser = await puppeteer.launch(pupp_options);
   const page = await browser.newPage();
@@ -167,10 +226,12 @@ const getAnswers = async (questions, checkbox, message, params) => {
 
   const seasons = await getSeasons(page);
 
-  const selectedSeasons = seasons[await getAnswers(seasons, false, 'Please select a season', ['sid'])];
-  const selectedCourses = (await getAnswers(selectedSeasons.courses, true, 'Please select the courses you want', ['id'])).map((c) => selectedSeasons.courses[c]);
-  const coursesContent = await getContent(page, selectedCourses, selectedSeasons.sid);
-  console.log(JSON.stringify(coursesContent, null, 2));
+  const selectedSeason = seasons[await getAnswers(seasons, false, 'Please select a season', ['sid'])];
+  const selectedCourses = (await getAnswers(selectedSeason.courses, true, 'Please select the courses you want', ['id'])).map((c) => selectedSeason.courses[c]);
+  const coursesContent = await getContent(page, selectedCourses, selectedSeason.sid);
+  for (let i = 0; i < coursesContent.length; i++) {
+    await downloadContent(page, selectedSeason.name, coursesContent[i].name, coursesContent[i].weeks);
+  }
 
   // 6- End the session
   await browser.close();
