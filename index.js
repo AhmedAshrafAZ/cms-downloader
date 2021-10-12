@@ -177,7 +177,6 @@ const downloadContent = async (page, season, courseName, weeks) => {
         console.log(`[+] The VOD (${file_name}) will be downloaded later`);
         resolve();
       } else {
-        resolve();
         httpntlm.get(
           {
             ...userAuthData,
