@@ -94,6 +94,7 @@ const getContent = async (page, courses, seasonId) => {
           const orgName = tempWeekContent[i].children[0].children[0].innerText.trim();
           const name = tempWeekContent[i].children[0].children[2].children[0].children[0].download.trim().replace('/', '').replace(':', '').toLowerCase();
           const id = parseInt(tempWeekContent[i].children[0].children[2].children[0].children[1].id);
+          const watchId = tempWeekContent[i].children[0].children[2].children[0].children[1].attributes['data-contentid'].value;
           const url = orgName.includes('(VoD)')
             ? `https://dacasts3-vh.akamaihd.net/i/secure/150675/150675_,${id}.mp4,.csmil/index_0_av.m3u8?null=0`
             : tempWeekContent[i].children[0].children[2].querySelector('a#download').href.trim();
@@ -102,6 +103,7 @@ const getContent = async (page, courses, seasonId) => {
             name,
             url,
             watched,
+            watchId,
           });
         }
 
@@ -149,6 +151,15 @@ const getAnswers = async (questions, checkbox, message, params) => {
     },
   ]);
   return checkbox ? answers.userAnswers.map((a) => questions.findIndex((q) => q.name === a)) : questions.findIndex((q) => q.name === answers.userAnswers);
+};
+
+const watchContent = async (page, watchId) => {
+  return await page.evaluate((watchId) => {
+    let el = document.querySelector(`input[data-contentid="${watchId}"]`);
+    if (el !== null) el.click();
+    el = document.querySelector('button[class="close closeclose"]');
+    if (el !== null) el.click();
+  }, watchId);
 };
 
 const downloadContent = async (page, season, courseName, weeks) => {
@@ -208,8 +219,9 @@ const downloadContent = async (page, season, courseName, weeks) => {
       const fileUrl = weekContent[j].url;
       const fileName = weekContent[j].name.replace(':', '').toLowerCase();
       await download(fileUrl, `${rootPath}${fileSeparator()}${weekName}`, fileName);
-      // Rate the downloaded content
-      // await rateContent(page, content[i].name);
+
+      // Watch the downloaded content
+      await watchContent(page, weekContent[j].watchId);
     }
   }
 };
