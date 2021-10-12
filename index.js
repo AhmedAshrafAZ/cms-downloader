@@ -95,7 +95,7 @@ const getContent = async (page, courses, seasonId) => {
           const name = tempWeekContent[i].children[0].children[2].children[0].children[0].download.trim().replace('/', '').replace(':', '').toLowerCase();
           const id = parseInt(tempWeekContent[i].children[0].children[2].children[0].children[1].id);
           const url = orgName.includes('(VoD)')
-            ? `https://dacasts3-vh.akamaihd.net/i/secure/150675/150675_,${id + 2}_${id}.mp4,${id}.mp4,.csmil/index_0_av.m3u8?null=0`
+            ? `https://dacasts3-vh.akamaihd.net/i/secure/150675/150675_,${id}.mp4,.csmil/index_0_av.m3u8?null=0`
             : tempWeekContent[i].children[0].children[2].querySelector('a#download').href.trim();
           const watched = tempWeekContent[i].children[0].children[3].querySelector('i.fa-eye-slash').style.display == 'none';
           weekContent.push({
@@ -159,9 +159,14 @@ const downloadContent = async (page, season, courseName, weeks) => {
 
     return new Promise((resolve, reject) => {
       if (url.includes('https://dacasts3-vh.akamaihd.net')) {
-        console.log('VOD');
+        const line = `${file_path}${fileSeparator()}${file_name}==${url}\n`;
+        fs.appendFile('VODs.txt', line, (err) => {
+          if (err) console.log('There is an error in file writing, please report it. Error is: ', err.message);
+        });
+        console.log(`[+] The VOD (${file_name}) will be downloaded later`);
         resolve();
       } else {
+        resolve();
         httpntlm.get(
           {
             ...userAuthData,
