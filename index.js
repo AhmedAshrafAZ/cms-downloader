@@ -134,7 +134,7 @@ const getContent = async (page, courses, seasonId) => {
   return content;
 };
 
-const getAnswers = async (questions, checkbox, message, params) => {
+const getAnswers = async (questions, checkbox, message) => {
   const answers = await inquirer.prompt([
     {
       type: checkbox ? 'checkbox' : 'list',
@@ -150,7 +150,7 @@ const getAnswers = async (questions, checkbox, message, params) => {
       loop: false,
     },
   ]);
-  return checkbox ? answers.userAnswers.map((a) => questions.findIndex((q) => q.name === a)) : questions.findIndex((q) => q.name === answers.userAnswers);
+  return checkbox ? answers.userAnswers.map((a) => questions.findIndex((q) => q.name === a)) : questions.findIndex((q) => (q.name || q) === answers.userAnswers);
 };
 
 const watchContent = async (page, watchId) => {
@@ -242,10 +242,39 @@ const downloadContent = async (page, season, courseName, weeks) => {
   await navigateTo(page, 'https://cms.guc.edu.eg/apps/student/ViewAllCourseStn');
 
   const seasons = await getSeasons(page);
-
   const selectedSeason = seasons[await getAnswers(seasons, false, 'Please select a season', ['sid'])];
-  const selectedCourses = (await getAnswers(selectedSeason.courses, true, 'Please select the courses you want', ['id'])).map((c) => selectedSeason.courses[c]);
-  const coursesContent = await getContent(page, selectedCourses, selectedSeason.sid);
+  const downloadTypes = ['All content', 'Unwatched content', 'Select content'];
+  const downloadType = await getAnswers(downloadTypes, false, 'Please select the download type');
+  let selectedCourses = [];
+  let coursesContent = [];
+  switch (downloadType) {
+    case 0:
+      selectedCourses = selectedSeason.courses;
+      coursesContent = await getContent(page, selectedCourses, selectedSeason.sid);
+      break;
+    case 1:
+      selectedCourses = selectedSeason.courses;
+      coursesContent = await getContent(page, selectedCourses, selectedSeason.sid);
+      coursesContent = coursesContent.map((course) => {
+        return {
+          ...course,
+          weeks: course.weeks.map((week) => {
+            return {
+              ...week,
+              content: week.content.filter((content) => content.watched === false),
+            };
+          }),
+        };
+      });
+      break;
+    case 2:
+      selectedCourses = (await getAnswers(selectedSeason.courses, true, 'Please select the courses you want', ['id'])).map((c) => selectedSeason.courses[c]);
+      coursesContent = await getContent(page, selectedCourses, selectedSeason.sid);
+      break;
+    default:
+      break;
+  }
+
   for (let i = 0; i < coursesContent.length; i++) {
     await downloadContent(page, selectedSeason.name, coursesContent[i].name, coursesContent[i].weeks);
   }
