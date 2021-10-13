@@ -107,15 +107,18 @@ def downloadSegments():
 		sys.stdout.write("\033[F")
 		sys.stdout.write("\033[K")
 		print(colored("[+] Downloaded", 'green'))
-		print(colored("[-] Converting", 'red'))
 
 		# Convert & Close everything
 		segments_file.close()
 		os.remove(fileName + "_segments.txt")
-		os.system('ffmpeg -y -i "' + fileName + '.ts" "' + fileName + '" -loglevel quiet')
-		os.remove(fileName + ".ts")
-		sys.stdout.write("\033[F")
-		sys.stdout.write("\033[K")
+		
+		if(convertVods):
+			print(colored("[-] Converting", 'red'))
+			os.system('ffmpeg -y -i "' + fileName + '.ts" "' + fileName + '" -loglevel quiet')
+			os.remove(fileName + ".ts")
+			sys.stdout.write("\033[F")
+			sys.stdout.write("\033[K")
+
 		sys.stdout.write("\033[F")
 		sys.stdout.write("\033[K")
 		sys.stdout.write("\033[F")
@@ -128,8 +131,8 @@ try:
 except:
 	print(colored("[+] No VODs to download", 'green'))
 	sys.exit()
-
 failedVods = []
+convertVods = sys.argv[1]
 for line in vods:
 	fileName = line.split('==')[0].strip()
 	base_url = line.split('==')[1].strip()
