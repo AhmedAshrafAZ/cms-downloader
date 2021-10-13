@@ -16,7 +16,7 @@ def getIndexUrl(base_url, username, password):
     curl.perform()
     curl.close()
 
-    # Extrach the id of the video
+    # Extract the id of the video
     script_tag = ""
     span_tag = ""
     with open("res.html") as fp:
@@ -54,7 +54,7 @@ def fetchSegments(base_url):
 	print(colored("[+] Completed fetching segments", 'green'))
 
 def filterSegments():
-	# To remove the comments from the m3u8 file and save the segments' link to segemnts.txt
+	# To remove the comments from the m3u8 file and save the segments' link to segments.txt
 	index_file = open("index_0_av.m3u8", 'r')
 	segments_file = open(fileName + "_segments.txt", 'w')
 	number_of_lines = 0
@@ -123,7 +123,12 @@ def downloadSegments():
 		print(colored("[+] Done downloading " + fileName, 'green'))
 
 # Starting the everything
-vods = open("VODs.txt", 'r')
+try:
+	vods = open("VODs.txt", 'r')
+except:
+	print(colored("[+] No VODs to download", 'green'))
+	sys.exit()
+
 failedVods = []
 for line in vods:
 	fileName = line.split('==')[0].strip()

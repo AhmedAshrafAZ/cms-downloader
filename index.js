@@ -175,6 +175,7 @@ const downloadContent = async (page, season, courseName, weeks) => {
           if (err) console.log('There is an error in file writing, please report it. Error is: ', err.message);
         });
         console.log(`[+] The VOD (${file_name}) will be downloaded later`);
+        console.log('------------');
         resolve();
       } else {
         httpntlm.get(
@@ -226,6 +227,7 @@ const downloadContent = async (page, season, courseName, weeks) => {
 };
 
 (async () => {
+  console.log('==> Session Started <==');
   const browser = await puppeteer.launch(pupp_options);
   const page = await browser.newPage();
 
@@ -242,7 +244,7 @@ const downloadContent = async (page, season, courseName, weeks) => {
 
   const seasons = await getSeasons(page);
   const selectedSeason = seasons[await getAnswers(seasons, false, 'Please select a season', ['sid'])];
-  const downloadTypes = ['All content', 'Unwatched content', 'Select content'];
+  const downloadTypes = ['All content', 'Unwatched content', 'Select courses'];
   const downloadType = await getAnswers(downloadTypes, false, 'Please select the download type');
   let selectedCourses = [];
   let coursesContent = [];
@@ -280,4 +282,5 @@ const downloadContent = async (page, season, courseName, weeks) => {
 
   // 6- End the session
   await browser.close();
+  console.log('==> Session Ended <==');
 })();
