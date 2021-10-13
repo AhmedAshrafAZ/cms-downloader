@@ -11,11 +11,16 @@ Every developer has the coding superpower 😎. So, as a developer, you should a
 ## Script Description
 
 This script is created to automate downloading the content from the GUC-CMS platform. It fetches the courses you are subscribed in, creates a folder for each course, downloads the content (ALL the content), each file in its corresponding week folder. Et voila! Everything is downloaded 🔥🔥
-## skip chromium installation 
+
+## Skip chromium installation (if you already have chromium installed)
+
+> **⚠️ Make sure you have chromium installed using `which chromium`**
+
 ```bash
 export CHROMIUM_EXECUTABLE_PATH=$(which chromium)
 export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ```
+
 When `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD` is set to `true`, puppeteer skips downloading the binaries for chromium, however you **must** provide an executable path to a chromium binary (which is done via the `CHROMIUM_EXECUTABLE_PATH` environment variable).
 
 ## Prepare your machine (if windows machine)
@@ -43,7 +48,7 @@ When `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD` is set to `true`, puppeteer skips downlo
 3. Install node modules
 
    ```
-   npm install
+   npm install && pip3 install -r requirements.txt
    ```
 
 4. Add your username (without @student.guc.edu.eg) to the ".env" file
@@ -60,7 +65,7 @@ When `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD` is set to `true`, puppeteer skips downlo
 
 6. Run the script and let the magic begin 🎩🎩🔥🔥
    ```
-   npm start
+   node index.js && python3 vodDownloader.py
    ```
 
 ## Unrevealing the magic behind the script 🤓
@@ -80,7 +85,3 @@ This script is mainly based on web scraping 🕷🕸 and DOM manipulation.
 ## Contribution 👀
 
 You are very welcome to contribute to this repo. Just create the your Pull Request, I will review it & your updates will be merged ASAP insha'Allah. 💪🏻💪🏻
-
-## Credits ©
-
-[Me](https://github.com/AhmedAshrafAZ) & [Ibrahim Mohammed](https://github.com/IbrahimMohammed47)
