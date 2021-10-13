@@ -64,6 +64,11 @@ When `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD` is set to `true`, puppeteer skips downlo
    ```
 
 6. Run the script and let the magic begin 🎩🎩🔥🔥
+   > if you want to convert downloaded videos to mp4 format, you can use the `--convert` flag. But make sure you have [ffmpeg](https://www.ffmpeg.org/) installed on your machine.
+   ```
+   node index.js && python3 vodDownloader.py --convert
+   ```
+   > if not, just run the script
    ```
    node index.js && python3 vodDownloader.py
    ```

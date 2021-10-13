@@ -3,6 +3,7 @@ import sys
 import pycurl
 from termcolor import colored
 from bs4 import BeautifulSoup
+import argparse
 
 def getIndexUrl(base_url, username, password):
     # Fetch The Page
@@ -126,13 +127,17 @@ def downloadSegments():
 		print(colored("[+] Done downloading " + fileName, 'green'))
 
 # Starting the everything
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--convert", help="Convert to mp4", action="store_true")
+convertVods = parser.parse_args().convert
+
 try:
 	vods = open("VODs.txt", 'r')
 except:
 	print(colored("[+] No VODs to download", 'green'))
 	sys.exit()
 failedVods = []
-convertVods = sys.argv[1]
+
 for line in vods:
 	fileName = line.split('==')[0].strip()
 	base_url = line.split('==')[1].strip()
