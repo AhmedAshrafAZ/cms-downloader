@@ -96,15 +96,16 @@ const getContent = async (page, courses, seasonId) => {
           const id = parseInt(tempWeekContent[i].children[0].children[2].children[0].children[1].id);
           const watchId = tempWeekContent[i].children[0].children[2].children[0].children[1].attributes['data-contentid'].value;
           const url = orgName.includes('(VoD)')
-            ? `https://dacasts3-vh.akamaihd.net/i/secure/150675/150675_,${id}.mp4,.csmil/index_0_av.m3u8?null=0`
+            ? `https://playback.dacast.com/content/access?contentId=150675_f_${id}&provider=dacast`
             : tempWeekContent[i].children[0].children[2].querySelector('a#download').href.trim();
           const watched = tempWeekContent[i].children[0].children[3].querySelector('i.fa-eye-slash').style.display == 'none';
-          weekContent.push({
-            name,
-            url,
-            watched,
-            watchId,
-          });
+          if (!orgName.includes('https://'))
+            weekContent.push({
+              name,
+              url,
+              watched,
+              watchId,
+            });
         }
 
         weeks.push({

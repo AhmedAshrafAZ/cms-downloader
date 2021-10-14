@@ -1,4 +1,4 @@
 termcolor==1.1.0
 pycurl==7.44.1
-beautifulsoup4==4.10.0
+simplejson==3.17.5
 argparse==1.4.0

@@ -1,42 +1,23 @@
 import os
 import sys
+from io import BytesIO
+import simplejson as json
 import pycurl
 from termcolor import colored
-from bs4 import BeautifulSoup
 import argparse
 
-def getIndexUrl(base_url, username, password):
-    # Fetch The Page
-    curl = pycurl.Curl()
-    curl.setopt(pycurl.URL, base_url)
-    curl.setopt(pycurl.SSL_VERIFYPEER, 0)
-    curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_NTLM)
-    curl.setopt(pycurl.USERPWD, "{}:{}".format(username, password))
-    index_file = open("res.html", 'wb')
-    curl.setopt(curl.WRITEDATA, index_file)
-    curl.perform()
-    curl.close()
-
-    # Extract the id of the video
-    script_tag = ""
-    span_tag = ""
-    with open("res.html") as fp:
-        soup = BeautifulSoup(fp, 'html.parser')
-        script_tag = soup.find_all('script', class_="dacast-video")[0]
-        span_tag = soup.find_all('span', id="fileName")[0]
-        
-    tag_id = BeautifulSoup(str(script_tag), 'html.parser').script['id']
-    filename = span_tag.string.split(':')[1].strip()
-
-    # Form the url
-    x = tag_id.split('_')[0]
-    y = tag_id.split('_')[2]
-    index_url = "https://dacasts3-vh.akamaihd.net/i/secure/{}/{}_,{}.raw,.csmil/index_0_av.m3u8?null=0".format(x, x, y)
-
-    # Delete the fetched file & return
-    index_file.close()
-    os.remove("res.html")
-    return [index_url, filename]
+def getIndexUrl(base_url):
+	c = pycurl.Curl()
+	b = BytesIO()
+	c.setopt(c.URL, base_url)
+	c.setopt(c.WRITEFUNCTION, b.write)
+	c.setopt(c.WRITEDATA, b)
+	c.perform()
+	tempUrl = json.loads(b.getvalue())['hls']
+	c.close()
+	b.close()
+	finalUrl = (tempUrl.split('?')[0]).replace('master.m3u8', 'index_0_av.m3u8')
+	return finalUrl
 
 def fetchSegments(base_url):
 	# Fetch video segments then save it to the m3u8 file
@@ -140,7 +121,7 @@ failedVods = []
 
 for line in vods:
 	fileName = line.split('==')[0].strip()
-	base_url = line.split('==')[1].strip()
+	base_url = getIndexUrl(line.split('==')[1].strip())
 	fetchSegments(base_url)
 	downloadSegments()
 vods.close()
