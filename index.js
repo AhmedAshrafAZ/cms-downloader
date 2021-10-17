@@ -124,10 +124,12 @@ const getContent = async (page, courses, seasonId) => {
   };
 
   for (let i = 0; i < courses.length; i++) {
-    await navigateTo(page, `https://cms.guc.edu.eg/apps/student/CourseViewStn.aspx?id=${courses[i].id}&sid=${seasonId}`);
+    const courseUrl = `https://cms.guc.edu.eg/apps/student/CourseViewStn.aspx?id=${courses[i].id}&sid=${seasonId}`;
+    await navigateTo(page, courseUrl);
     await resolveContentName(page);
     content.push({
       name: courses[i].name,
+      url: courseUrl,
       weeks: await getWeeks(page),
       announcements: await getCourseAnnouncements(page),
     });
@@ -278,6 +280,7 @@ const downloadContent = async (page, season, courseName, weeks) => {
   }
 
   for (let i = 0; i < coursesContent.length; i++) {
+    await navigateTo(page, coursesContent[i].url);
     await downloadContent(page, selectedSeason.name, coursesContent[i].name, coursesContent[i].weeks);
   }
 
