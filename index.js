@@ -172,7 +172,7 @@ const downloadContent = async (page, season, courseName, weeks) => {
     console.log(`[-] Downloading file (${file_name})...`);
 
     return new Promise((resolve, reject) => {
-      if (url.includes('https://dacasts3-vh.akamaihd.net')) {
+      if (url.includes('https://playback.dacast.com')) {
         const line = `${file_path}${fileSeparator()}${file_name}==${url}\n`;
         fs.appendFile('VODs.txt', line, (err) => {
           if (err) console.log('There is an error in file writing, please report it. Error is: ', err.message);
