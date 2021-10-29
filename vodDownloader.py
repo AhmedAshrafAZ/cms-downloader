@@ -10,13 +10,21 @@ def getIndexUrl(base_url):
 	c = pycurl.Curl()
 	b = BytesIO()
 	c.setopt(c.URL, base_url)
+	c.setopt(pycurl.SSL_VERIFYPEER, 0)
 	c.setopt(c.WRITEFUNCTION, b.write)
 	c.setopt(c.WRITEDATA, b)
-	c.perform()
-	tempUrl = json.loads(b.getvalue())['hls']
+	finalUrl = ""
+	try:
+		c.perform()
+		tempUrl = json.loads(b.getvalue())['hls']
+		finalUrl = (tempUrl.split('?')[0]).replace('master.m3u8', 'index_0_av.m3u8')
+	except:
+		sys.stdout.write("\033[F")
+		sys.stdout.write("\033[K")
+		print(colored("[!] Error Downloading: " + fileName, 'red'))
+		failedVods.append(line.strip())
 	c.close()
 	b.close()
-	finalUrl = (tempUrl.split('?')[0]).replace('master.m3u8', 'index_0_av.m3u8')
 	return finalUrl
 
 def fetchSegments(base_url):
@@ -26,6 +34,7 @@ def fetchSegments(base_url):
 	# Build request
 	curl = pycurl.Curl()
 	curl.setopt(curl.URL, base_url)
+	curl.setopt(pycurl.SSL_VERIFYPEER, 0)
 	curl.setopt(curl.WRITEDATA, index_file)
 	curl.perform()
 	# Close everything and print confirmation
@@ -122,8 +131,9 @@ failedVods = []
 for line in vods:
 	fileName = line.split('==')[0].strip()
 	base_url = getIndexUrl(line.split('==')[1].strip())
-	fetchSegments(base_url)
-	downloadSegments()
+	if(base_url):
+		fetchSegments(base_url)
+		downloadSegments()
 vods.close()
 os.remove("VODs.txt")
 
