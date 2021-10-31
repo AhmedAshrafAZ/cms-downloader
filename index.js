@@ -164,10 +164,13 @@ const watchContent = async (page, watchId) => {
     if (el !== null) el.click();
   }, watchId);
 };
-
 const downloadContent = async (page, season, courseName, weeks) => {
+  courseName = courseName.replace(':', '');
   const download = (url, file_path, file_name) => {
-    if (!fs.existsSync(file_path)) fs.mkdirSync(file_path, { recursive: true });
+    if (!fs.existsSync(file_path))
+      fs.mkdirSync(file_path, { recursive: true }, (err) => {
+        console.log('There is an error in making directories, please report it. Error is: ', err.message);
+      });
 
     console.log(`[-] Downloading file (${file_name})...`);
 
