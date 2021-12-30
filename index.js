@@ -93,10 +93,10 @@ const getContent = async (page, courses, seasonId) => {
         for (let i = 1; i < tempWeekContent.length; i++) {
           const orgName = tempWeekContent[i].children[0].children[0].innerText.trim();
           const name = tempWeekContent[i].children[0].children[2].children[0].children[0].download.trim().replace('/', '').replace(':', '').toLowerCase();
-          const id = parseInt(tempWeekContent[i].children[0].children[2].children[0].children[1].id);
+          const id = tempWeekContent[i].children[0].children[2].children[0].children[1].id;
           const watchId = tempWeekContent[i].children[0].children[2].children[0].children[1].attributes['data-contentid'].value;
           const url = orgName.includes('(VoD)')
-            ? `https://playback.dacast.com/content/access?contentId=150675_f_${id}&provider=dacast`
+            ? `https://playback.dacast.com/content/info?contentId=${id}&provider=dacast`
             : tempWeekContent[i].children[0].children[2].querySelector('a#download').href.trim();
           const watched = tempWeekContent[i].children[0].children[3].querySelector('i.fa-eye-slash').style.display == 'none';
           if (!orgName.includes('https://'))

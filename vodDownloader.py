@@ -13,11 +13,34 @@ def getIndexUrl(base_url):
 	c.setopt(pycurl.SSL_VERIFYPEER, 0)
 	c.setopt(c.WRITEFUNCTION, b.write)
 	c.setopt(c.WRITEDATA, b)
+	c.perform()
+	vodId = json.loads(b.getvalue())['contentInfo']['contentId']
+	base_url = 'https://playback.dacast.com/content/access?contentId=' + vodId + '&provider=universe'
 	finalUrl = ""
 	try:
+		b = BytesIO()
+		c.setopt(c.URL, base_url)
+		c.setopt(pycurl.SSL_VERIFYPEER, 0)
+		c.setopt(c.WRITEFUNCTION, b.write)
+		c.setopt(c.WRITEDATA, b)
 		c.perform()
 		tempUrl = json.loads(b.getvalue())['hls']
-		finalUrl = (tempUrl.split('?')[0]).replace('master.m3u8', 'index_0_av.m3u8')
+		indexUrl = tempUrl.replace('manifest.m3u8', 'index_0_av.m3u8')
+		b = BytesIO()
+		c.setopt(c.URL, indexUrl)
+		c.setopt(pycurl.SSL_VERIFYPEER, 0)
+		c.setopt(c.WRITEFUNCTION, b.write)
+		c.setopt(c.WRITEDATA, b)
+		c.perform()
+		data = b.getvalue().decode("utf-8").split('\n')
+		partialUrl = ""
+		for i in range(len(data)):
+			temp = data[i].replace('\'', '').replace('"', '').strip()
+			if(temp.startswith("stream-audio")):
+				partialUrl = data[i]
+				break
+		dacast = tempUrl.split('stream.ismd')[0] + "stream.ismd/"
+		finalUrl = dacast + partialUrl
 	except:
 		sys.stdout.write("\033[F")
 		sys.stdout.write("\033[K")
@@ -65,14 +88,14 @@ def downloadSegments():
 	progress_bar_counter = 1
 	print(colored("Downloading ==> ", 'red') + colored("".join(progress_bar), 'green'))
 	segments_file = open(fileName + "_segments.txt", 'r')
-	video = open(fileName + ".ts", 'wb')	
+	video = open(fileName + ".ts", 'wb') 
 
 	# Start fetching
 	for url in segments_file:
 		# Build request
 		curl = pycurl.Curl()
 		curl.setopt(curl.WRITEDATA, video)
-		curl.setopt(curl.URL, url.strip())
+		curl.setopt(curl.URL, dacastUrl + url.strip())
 		downloaded = True
 		try:
 			curl.perform()
@@ -131,6 +154,7 @@ failedVods = []
 for line in vods:
 	fileName = line.split('==')[0].strip()
 	base_url = getIndexUrl(line.split('==')[1].strip())
+	dacastUrl = base_url.split('stream.ismd')[0] + "stream.ismd/"
 	if(base_url):
 		fetchSegments(base_url)
 		downloadSegments()
