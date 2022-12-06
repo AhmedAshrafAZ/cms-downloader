@@ -59,6 +59,10 @@ const getSeasons = async (page) => {
       const seasonCourses = document.querySelectorAll(`table[id="ContentPlaceHolderright_ContentPlaceHoldercontent_r1_GridView1_${index}"]`)[0].children[0].children;
       for (let i = 1; i < seasonCourses.length; i++) {
         const courseName = seasonCourses[i].children[1].innerText.trim().replaceAll('|', '');
+        const is_active = (seasonCourses[i].children[2].innerText.trim() === 'Active');
+        if(!is_active){
+          continue;
+        }
         seasons[index].courses.push({
           name: courseName.substring(0, courseName.lastIndexOf('(')).trim().replace('(', '[').replace(')', ']'),
           id: parseInt(courseName.substring(courseName.lastIndexOf('(') + 1, courseName.lastIndexOf(')')).trim()),
