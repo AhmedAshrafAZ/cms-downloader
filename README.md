@@ -63,7 +63,13 @@ When `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD` is set to `true`, puppeteer skips downlo
    echo "GUC_SK_PASSWORD=your_password" >> .env
    ```
 
-6. Run the script and let the magic begin 🎩🎩🔥🔥
+6. Add your University cms link (https://cms.guc.edu.eg for GUC and https://cms.giu-uni.de for GIU students) to the ".env" file
+
+   ```
+   echo "HOST_URL=your_url" >> .env
+   ```
+
+7. Run the script and let the magic begin 🎩🎩🔥🔥
    > if you want to convert downloaded videos to mp4 format, you can use the `--convert` flag. But make sure you have [ffmpeg](https://www.ffmpeg.org/) installed on your machine.
    ```
    node index.js && python3 vodDownloader.py --convert

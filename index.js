@@ -19,12 +19,14 @@ const userAuthData = {
   password: process.env.GUC_SK_PASSWORD,
 };
 
+const HOST = process.env.HOST_URL;
+
 const authenticateUser = () => {
   return new Promise((resolve, reject) => {
     httpntlm.get(
       {
         ...userAuthData,
-        url: 'https://cms.guc.edu.eg/apps/student/HomePageStn.aspx',
+        url: `${HOST}/apps/student/HomePageStn.aspx`,
         rejectUnauthorized: false,
       },
       (err, res) => {
@@ -124,7 +126,7 @@ const getContent = async (page, courses, seasonId) => {
   };
 
   for (let i = 0; i < courses.length; i++) {
-    const courseUrl = `https://cms.guc.edu.eg/apps/student/CourseViewStn.aspx?id=${courses[i].id}&sid=${seasonId}`;
+    const courseUrl = `${HOST}/apps/student/CourseViewStn.aspx?id=${courses[i].id}&sid=${seasonId}`;
     await navigateTo(page, courseUrl);
     await resolveContentName(page);
     content.push({
@@ -246,7 +248,7 @@ const downloadContent = async (page, season, courseName, weeks) => {
   }
 
   await page.authenticate(userAuthData);
-  await navigateTo(page, 'https://cms.guc.edu.eg/apps/student/ViewAllCourseStn');
+  await navigateTo(page, `${HOST}/apps/student/ViewAllCourseStn`);
 
   const seasons = await getSeasons(page);
   const selectedSeason = seasons[await getAnswers(seasons, false, 'Please select a season', ['sid'])];
